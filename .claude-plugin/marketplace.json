@@ -1,0 +1,7 @@
+{
+  "name": "mods-gus-matrix",
+  "owner": { "name": "GusMenn" },
+  "plugins": [
+    { "name": "matrix-rain", "source": "./", "description": "Falling green code rain backdrop with depth" }
+  ]
+}
