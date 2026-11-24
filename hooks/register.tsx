@@ -30,12 +30,13 @@ type Layer = {
   opacity: number
   minDur: number
   maxDur: number
+  blur: number
 }
 
 const LAYERS: Layer[] = [
-  { name: 'far', count: 34, size: 11, length: 22, color: '#16913f', head: '#7fe39a', opacity: 0.7, minDur: 50, maxDur: 66 },
-  { name: 'mid', count: 24, size: 17, length: 20, color: '#2bd065', head: '#c4ffd2', opacity: 0.85, minDur: 34, maxDur: 44 },
-  { name: 'near', count: 13, size: 28, length: 17, color: '#5cff95', head: '#f0fff3', opacity: 1, minDur: 22, maxDur: 30 },
+  { name: 'far', count: 34, size: 11, length: 22, color: '#16913f', head: '#7fe39a', opacity: 0.7, minDur: 50, maxDur: 66, blur: 3.4 },
+  { name: 'mid', count: 24, size: 17, length: 20, color: '#2bd065', head: '#c4ffd2', opacity: 0.85, minDur: 34, maxDur: 44, blur: 4 },
+  { name: 'near', count: 13, size: 28, length: 17, color: '#5cff95', head: '#f0fff3', opacity: 1, minDur: 22, maxDur: 30, blur: 4.6 },
 ]
 
 const escape = (c: string) => (c === '<' ? '&lt;' : c === '>' ? '&gt;' : c)
@@ -45,7 +46,7 @@ function layerMarkup(layer: Layer): { css: string; body: string } {
   const strip = step * layer.length
   const css =
     `@keyframes f-${layer.name}{from{transform:translate3d(0,-${Math.ceil(strip)}px,0)}to{transform:translate3d(0,${H}px,0)}}` +
-    `.${layer.name}{animation:f-${layer.name} linear infinite;font-size:${layer.size}px;will-change:transform}`
+    `.${layer.name}{animation:f-${layer.name} linear infinite;font-size:${layer.size}px;will-change:transform;filter:url(#b-${layer.name})}`
   let body = `<g opacity="${layer.opacity}" fill="url(#g-${layer.name})">`
 
   for (let i = 0; i < layer.count; i++) {
@@ -77,11 +78,15 @@ function buildScene(): string {
       `<stop offset="0.7" stop-color="${l.color}" stop-opacity="0.8"/>` +
       `<stop offset="1" stop-color="${l.color}"/></linearGradient>`,
   ).join('')
+  // Desenfoque propio de la escena: se ve igual en la sesion seleccionada y en la otra.
+  const blurs = LAYERS.map(
+    l => `<filter id="b-${l.name}" x="-50%" y="-5%" width="200%" height="110%"><feGaussianBlur stdDeviation="${l.blur}"/></filter>`,
+  ).join('')
 
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice">` +
     `<style>text{font-family:monospace;font-weight:bold}${parts.map(p => p.css).join('')}</style>` +
-    `<defs>${grads}` +
+    `<defs>${grads}${blurs}` +
     `<radialGradient id="vig" cx="0.5" cy="0.45" r="0.75">` +
     `<stop offset="0" stop-color="#000" stop-opacity="0.3"/>` +
     `<stop offset="0.6" stop-color="#000" stop-opacity="0.08"/>` +
@@ -116,7 +121,7 @@ const { theme, problems } = makeColors({
 
 const LOOK: ThemeSetArgs = {
   colors: theme,
-  backdrop: { scene: 'matrix', glass: { blur: 3, tint: '#000000', opacity: 0.45 } },
+  backdrop: { scene: 'matrix', glass: { blur: 0, tint: '#000000', opacity: 0.45 } },
 }
 
 export const register: Register = on => {
